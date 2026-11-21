@@ -43,6 +43,7 @@
     <AssemblyMetadata Include="ApiClientOutput" Value="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\src\WebApi.Modules.Taxonomies.Client\bin\$(Configuration)\net10.0\soft.square.net.WebApi.Modules.Taxonomies.Client.dll'))" />
     <AssemblyMetadata Include="UiOutput" Value="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\src\Module.Taxonomies\bin\$(Configuration)\net10.0\soft.square.net.Module.Taxonomies.dll'))" />
     <AssemblyMetadata Include="PlaygroundData" Value="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory).data'))" />
+    <AssemblyMetadata Include="RepoRoot" Value="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))" />
   </ItemGroup>
 
   <Target Name="CheckPlatformCheckout" BeforeTargets="CollectPackageReferences;Restore;Build">

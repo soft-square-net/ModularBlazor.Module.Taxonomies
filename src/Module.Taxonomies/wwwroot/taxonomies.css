@@ -13,3 +13,47 @@
 .mn-body { min-height: 8em; resize: vertical; font: inherit; }
 .mn-row-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .mn-pager { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 12px; }
+.mn-check { display: inline-flex; gap: 6px; align-items: center; padding-block: 8px; }
+.mn-chip { display: inline-flex; gap: 4px; align-items: center; margin-inline-start: 8px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--mud-palette-lines-default, currentColor); font-size: 0.8125rem; }
+.mn-result { margin: 12px 0 0; padding: 12px; overflow-x: auto; border-radius: 6px; background: var(--mud-palette-background-gray, rgba(127,127,127,.12)); font-size: 0.8125rem; }
+.tx-back { display: inline-block; margin-bottom: 4px; color: var(--mud-palette-primary); text-decoration: none; }
+.tx-new { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 4px 16px; }
+.tx-new-wide { grid-column: 1 / -1; }
+.tx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 4px 16px; }
+.tx-jsonld { max-height: 50vh; white-space: pre-wrap; word-break: break-word; }
+/* The scheme editor (/taxonomies/scheme): the tree beside the selected term; one column on narrow screens. */
+.tx-editor { display: grid; grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr); gap: 16px; align-items: start; }
+.tx-side { position: sticky; top: 72px; }
+@media (max-width: 960px) { .tx-editor { grid-template-columns: minmax(0, 1fr); } .tx-side { position: static; } }
+.tx-tree { list-style: none; margin: 0 0 12px; padding: 0; }
+.tx-term { display: flex; align-items: center; gap: 8px; padding-inline-start: calc(var(--tx-depth, 0) * 24px); border-radius: 6px; }
+.tx-term:hover { background: var(--mud-palette-action-default-hover, rgba(127,127,127,.08)); }
+.tx-term.tx-on { background: var(--mud-palette-primary-hover, rgba(89,74,226,.12)); }
+.tx-term-name { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 8px; border: 0; background: none; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.tx-count { font-size: 0.75rem; }
+.tx-term-actions { display: flex; gap: 2px; opacity: .35; }
+.tx-term:hover .tx-term-actions, .tx-term.tx-on .tx-term-actions, .tx-term-actions:focus-within { opacity: 1; }
+.tx-icon { width: 28px; height: 28px; border: 0; border-radius: 4px; background: none; color: inherit; cursor: pointer; }
+.tx-icon:hover:not(:disabled) { background: var(--mud-palette-action-default-hover, rgba(127,127,127,.15)); }
+.tx-icon:disabled { opacity: .3; cursor: default; }
+.tx-add { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.tx-add > .mud-input-wrapper { flex: 1; }
+.tx-concept-id { max-width: 140px; }
+/* Shared by the editor and the pick-terms dialog, which other modules' pages show: tx- classes only. */
+.tx-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tx-chips .mn-chip, .tx-chip, .tx-picker .mn-chip, .tx-term .mn-chip { margin-inline-start: 0; }
+.tx-concept { border-color: var(--mud-palette-info, #2196f3); color: var(--mud-palette-info, #2196f3); }
+.tx-chip-remove { border: 0; background: none; color: inherit; cursor: pointer; padding: 0 2px; font-size: 0.75rem; opacity: .7; }
+.tx-picker { display: grid; gap: 8px; max-height: 70vh; overflow-y: auto; }
+.tx-picker .mn-chip { display: inline-flex; gap: 4px; align-items: center; padding: 0 8px; border-radius: 999px; border: 1px solid var(--mud-palette-lines-default, currentColor); font-size: 0.8125rem; }
+.tx-picker .mn-muted { color: var(--mud-palette-text-secondary); }
+.tx-picker .mn-error { color: var(--mud-palette-error); }
+.tx-picker-search { display: flex; gap: 8px; }
+.tx-picker-query { flex: 1 1 auto; min-width: 0; }
+.tx-picker-search > .mud-input-wrapper--select { flex: 0 0 180px; width: auto; }
+.tx-picker-results { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.tx-picker-results li[role="option"] { display: flex; gap: 8px; align-items: center; padding: 6px 8px; padding-inline-start: calc(8px + var(--tx-depth, 0) * 20px); border-radius: 6px; cursor: pointer; }
+.tx-picker-results li[role="option"]:hover { background: var(--mud-palette-action-default-hover, rgba(127,127,127,.12)); }
+.tx-picker-results li.tx-on { background: var(--mud-palette-primary-hover, rgba(89,74,226,.12)); }
+.tx-picker-scheme { padding: 8px 8px 2px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--mud-palette-text-secondary); }
+.tx-picker-name { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }

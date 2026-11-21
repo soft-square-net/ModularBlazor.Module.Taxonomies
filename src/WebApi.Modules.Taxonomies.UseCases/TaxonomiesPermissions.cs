@@ -7,11 +7,11 @@ namespace soft.square.net.WebApi.Modules.Taxonomies.UseCases;
 public static class TaxonomiesPermissions
 {
     public const string Read = "taxonomies.read";
-    public const string Write = "taxonomies.write";
+    public const string Manage = "taxonomies.manage";
 
     public static IReadOnlyList<PermissionDefinition> All { get; } =
     [
-        new(Read, "Read and search notes."),
-        new(Write, "Create, edit and delete notes.")
+        new(Read, "Read schemes and their terms, search terms, and their JSON-LD."),
+        new(Manage, "Create, change and delete schemes and their terms.")
     ];
 }

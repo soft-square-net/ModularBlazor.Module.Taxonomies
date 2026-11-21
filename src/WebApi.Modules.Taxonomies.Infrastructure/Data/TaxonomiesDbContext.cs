@@ -2,7 +2,7 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using soft.square.net.WebApi.Contracts.Tenancy;
 using soft.square.net.WebApi.Data;
-using soft.square.net.WebApi.Modules.Taxonomies.Core.NoteAggregate;
+using soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate;
 
 namespace soft.square.net.WebApi.Modules.Taxonomies.Infrastructure.Data;
 
@@ -16,7 +16,7 @@ public sealed class TaxonomiesDbContext(DbContextOptions<TaxonomiesDbContext> op
 {
     protected override string Schema => "taxonomies";
 
-    public DbSet<Note> Notes => Set<Note>();
+    public DbSet<TaxonomyScheme> Schemes => Set<TaxonomyScheme>();
 
     protected override void ConfigureModel(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
