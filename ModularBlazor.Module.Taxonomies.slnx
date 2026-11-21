@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WebApi.Modules.Taxonomies.Core/WebApi.Modules.Taxonomies.Core.csproj" />
+    <Project Path="src/WebApi.Modules.Taxonomies.UseCases/WebApi.Modules.Taxonomies.UseCases.csproj" />
+    <Project Path="src/WebApi.Modules.Taxonomies.Infrastructure/WebApi.Modules.Taxonomies.Infrastructure.csproj" />
+    <Project Path="src/WebApi.Modules.Taxonomies.Web/WebApi.Modules.Taxonomies.Web.csproj" />
+    <Project Path="src/WebApi.Modules.Taxonomies.Client/WebApi.Modules.Taxonomies.Client.csproj" />
+    <Project Path="src/Module.Taxonomies/Module.Taxonomies.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WebApi.Modules.Taxonomies.UnitTests/WebApi.Modules.Taxonomies.UnitTests.csproj" />
+    <Project Path="tests/WebApi.Modules.Taxonomies.IntegrationTests/WebApi.Modules.Taxonomies.IntegrationTests.csproj" />
+  </Folder>
+</Solution>
