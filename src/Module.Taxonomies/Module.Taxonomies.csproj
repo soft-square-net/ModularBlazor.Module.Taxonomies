@@ -2,8 +2,8 @@
   <Sdk Name="soft.square.net.ModularBlazor.Module.Sdk" />
 
   <!--
-    The Blazor client module of Taxonomies, loaded by ModularBlazor.BlzWebClient: the Notes page (list, search, add,
-    edit, delete) over the module's API.
+    The Blazor client module of Taxonomies, loaded by ModularBlazor.BlzWebClient: the Taxonomies pages (schemes and their
+    term trees) and the pick-terms dialog over the module's API.
 
     Shipped as soft.square.net.Module.Taxonomies.dll alone (the client part of the module). The API client is its own
     hidden client module (WebApi.Modules.Taxonomies.Client, listed in Dependencies): referenced here to compile, never

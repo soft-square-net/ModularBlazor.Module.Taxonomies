@@ -19,16 +19,11 @@ namespace soft.square.net.WebApi.Modules.Taxonomies.Infrastructure.Data.Migratio
                 .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.NoteAggregate.Note", b =>
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.TaxonomyScheme", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("varchar(2000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -38,15 +33,29 @@ namespace soft.square.net.WebApi.Modules.Taxonomies.Infrastructure.Data.Migratio
                         .HasMaxLength(128)
                         .HasColumnType("varchar(128)");
 
-                    b.Property<string>("TenantId")
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("varchar(64)");
 
-                    b.Property<string>("Title")
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -59,7 +68,79 @@ namespace soft.square.net.WebApi.Modules.Taxonomies.Infrastructure.Data.Migratio
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("taxonomies_notes", (string)null);
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("taxonomies_schemes", (string)null);
+                });
+
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.Term", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<int?>("ConceptId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConceptName")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SchemeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConceptId");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("SchemeId", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("taxonomies_terms", (string)null);
+                });
+
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.Term", b =>
+                {
+                    b.HasOne("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.TaxonomyScheme", null)
+                        .WithMany("Terms")
+                        .HasForeignKey("SchemeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.TaxonomyScheme", b =>
+                {
+                    b.Navigation("Terms");
                 });
 #pragma warning restore 612, 618
         }

@@ -87,6 +87,25 @@ if (mode == "dev")
     webApi.WithEnvironment("Modules__Local__taxonomies", Metadata("ModuleOutput"))
         .WithEnvironment(ClientLocal + "WebApi.Modules.Taxonomies.Client", Metadata("ApiClientOutput"))
         .WithEnvironment(ClientLocal + "Module.Taxonomies", Metadata("UiOutput"));
+
+    // Optional: the Keywords module beside it, from a built Module.Keywords checkout (Playground:Keywords, default
+    // ../Module.Keywords next to this repo), so terms can be linked to concepts with its pick-concepts dialog. Without
+    // it the scheme editor takes a concept id typed in.
+    var keywords = Path.GetFullPath(builder.Configuration["Playground:Keywords"] ?? Path.Combine(Metadata("RepoRoot"), "..", "Module.Keywords"));
+    var keywordsWeb = Path.Combine(keywords, "src", "WebApi.Modules.Keywords.Web", "bin", "Debug", "net10.0");
+    var keywordsApiClient = Path.Combine(keywords, "src", "WebApi.Modules.Keywords.Client", "bin", "Debug", "net10.0", "soft.square.net.WebApi.Modules.Keywords.Client.dll");
+    var keywordsUi = Path.Combine(keywords, "src", "Module.Keywords", "bin", "Debug", "net10.0", "soft.square.net.Module.Keywords.dll");
+    if (File.Exists(Path.Combine(keywordsWeb, "soft.square.net.WebApi.Modules.Keywords.Web.dll")) && File.Exists(keywordsApiClient) && File.Exists(keywordsUi))
+    {
+        Console.WriteLine($"Keywords: loading the module built in {keywords}.");
+        webApi.WithEnvironment("Modules__Local__keywords", keywordsWeb + Path.DirectorySeparatorChar)
+            .WithEnvironment(ClientLocal + "WebApi.Modules.Keywords.Client", keywordsApiClient)
+            .WithEnvironment(ClientLocal + "Module.Keywords", keywordsUi)
+            .WithEnvironment("Access__DevGrants__0__Permissions__1", "keywords.*")
+            .WithEnvironment("Access__DevGrants__1__Permissions__1", "keywords.read");
+    }
+    else if (builder.Configuration["Playground:Keywords"] is not null)
+        Console.WriteLine($"Keywords: no Debug build in {keywords}; build it (dotnet build) to load it beside Taxonomies.");
 }
 
 builder.AddProject<Projects.ModularBlazor_BlzWebClient>("blzwebclient", launchProfileName: null)

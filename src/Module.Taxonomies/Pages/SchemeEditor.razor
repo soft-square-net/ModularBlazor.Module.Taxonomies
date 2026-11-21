@@ -1,0 +1,377 @@
+@page "/taxonomies/scheme"
+@using System.Text.Encodings.Web
+@using System.Text.Json
+@inherits TaxonomiesPageBase
+@inject IModuleDialogs ModuleDialogs
+
+@*
+  One scheme (?key=): its tree of terms. Select a term to change it, link it to a Keywords concept (with
+  Module.Keywords/pick-concepts when that module is in the user's catalog), add terms under it, or remove it; the
+  arrows move a term among its siblings (↑ ↓) or a level (→ under the term above it, ← out of its parent). Every change
+  is one call that answers with the whole tree, at the scheme's new version.
+*@
+
+<PageTitle>@(_scheme?.Name ?? "Scheme")</PageTitle>
+
+<div class="mud-container mn-page">
+  <header class="mn-header">
+    <div>
+      <a href="taxonomies" class="mud-typography mud-typography-body2 tx-back">← Taxonomies</a>
+      <h1 class="mud-typography mud-typography-h4">@(_scheme?.Name ?? Key)</h1>
+      @if (_scheme is { } s)
+      {
+        <p class="mud-typography mud-typography-body2 mn-muted">
+          <code>@s.Key</code> · @s.Terms.Count terms · language @s.Language · version @s.Version · changed @When(s.UpdatedAt)
+          @if (s.Description is { Length: > 0 } d) { <br /><span>@d</span> }
+        </p>
+      }
+    </div>
+    @if (_scheme is { } scheme)
+    {
+      <div class="mn-actions">
+        <button type="button" class="mud-button-root mud-button-outlined mud-button-primary mud-button-medium" @onclick="ToggleSettings" aria-expanded="@_settingsOpen">Scheme settings</button>
+        <button type="button" class="mud-button-root mud-button-outlined mud-button-primary mud-button-medium" @onclick="ToggleJsonLdAsync" aria-expanded="@(_jsonLd is not null)">JSON-LD</button>
+        @if (scheme.Terms.Count == 0)
+        {
+          <button type="button" class="mud-button-root mud-button-outlined mud-button-error mud-button-medium" @onclick="DeleteSchemeAsync" disabled="@Busy">Delete scheme</button>
+        }
+      </div>
+    }
+  </header>
+
+  @if (Error is not null)
+  {
+    <p class="mud-typography mud-typography-body2 mn-error" role="alert">@Error</p>
+  }
+
+  @if (_scheme is null)
+  {
+    @if (Error is null) { <p class="mud-typography mud-typography-body2 mn-muted">Loading…</p> }
+  }
+  else
+  {
+    @if (_settingsOpen)
+    {
+      <section class="mud-paper mud-elevation-2 mn-card">
+        <h2 class="mud-typography mud-typography-h6">Scheme settings</h2>
+        <div class="tx-grid">
+          <div class="mud-input-control">
+            <label class="mud-input-label" for="tx-s-name">Name *</label>
+            <div class="mud-input-wrapper"><input id="tx-s-name" class="mud-input-slot" @bind="_sName" maxlength="200" /></div>
+          </div>
+          <div class="mud-input-control">
+            <label class="mud-input-label" for="tx-s-language">Language of the names</label>
+            <div class="mud-input-wrapper"><input id="tx-s-language" class="mud-input-slot" @bind="_sLanguage" maxlength="16" /></div>
+          </div>
+        </div>
+        <div class="mud-input-control">
+          <label class="mud-input-label" for="tx-s-description">Description</label>
+          <div class="mud-input-wrapper"><textarea id="tx-s-description" class="mud-input-slot" rows="2" maxlength="1000" @bind="_sDescription"></textarea></div>
+        </div>
+        <div class="mn-row-actions">
+          <button type="button" class="mud-button-root mud-button-filled mud-button-primary mud-button-medium" @onclick="SaveSettingsAsync" disabled="@Busy">Save</button>
+          <button type="button" class="mud-button-root mud-button-text mud-button-medium" @onclick="() => _settingsOpen = false">Close</button>
+        </div>
+      </section>
+    }
+
+    @if (_jsonLd is not null)
+    {
+      <section class="mud-paper mud-elevation-2 mn-card">
+        <h2 class="mud-typography mud-typography-h6">JSON-LD</h2>
+        <p class="mud-typography mud-typography-body2 mn-muted">The scheme as a schema.org DefinedTermSet. A page tagged with a term embeds that term as <code>about</code> and its path as <code>articleSection</code>.</p>
+        <pre class="mn-result tx-jsonld" dir="ltr">@_jsonLd</pre>
+      </section>
+    }
+
+    <div class="tx-editor">
+      <section class="mud-paper mud-elevation-1 mn-card tx-tree-card">
+        <h2 class="mud-typography mud-typography-h6">Terms</h2>
+        @if (_scheme.Terms.Count == 0)
+        {
+          <p class="mud-typography mud-typography-body2 mn-muted">No terms yet. Add the top-level ones below, then the ones under them.</p>
+        }
+        <ul class="tx-tree" role="tree" aria-label="Terms of @_scheme.Name">
+          @foreach (var term in _scheme.Terms)
+          {
+            var t = term;
+            var siblings = Siblings(t.ParentId);
+            <li role="treeitem" aria-level="@(t.Depth + 1)" aria-selected="@(_selectedId == t.Id ? "true" : "false")"
+                class="tx-term @(_selectedId == t.Id ? "tx-on" : "")" style="--tx-depth: @t.Depth">
+              <button type="button" class="tx-term-name" @onclick="() => Select(t)">
+                <span>@t.Name</span>
+                @if (t.ConceptId is not null) { <span class="mn-chip tx-concept" title="Stands for the Keywords concept @t.ConceptName">◆ @(t.ConceptName ?? $"#{t.ConceptId}")</span> }
+                @if (t.ChildCount > 0) { <span class="mn-muted tx-count">@t.ChildCount</span> }
+              </button>
+              <span class="tx-term-actions">
+                <button type="button" class="tx-icon" title="Up" aria-label="@($"Move {t.Name} up")" disabled="@(Busy || t.Position == 0)" @onclick="() => MoveAsync(t, t.ParentId, t.Position - 1)">↑</button>
+                <button type="button" class="tx-icon" title="Down" aria-label="@($"Move {t.Name} down")" disabled="@(Busy || t.Position >= siblings.Count - 1)" @onclick="() => MoveAsync(t, t.ParentId, t.Position + 1)">↓</button>
+                <button type="button" class="tx-icon" title="Under the term above" aria-label="@($"Move {t.Name} under the term above")" disabled="@(Busy || t.Position == 0)" @onclick="() => IndentAsync(t)">→</button>
+                <button type="button" class="tx-icon" title="Out of its parent" aria-label="@($"Move {t.Name} out of its parent")" disabled="@(Busy || t.ParentId is null)" @onclick="() => OutdentAsync(t)">←</button>
+              </span>
+            </li>
+          }
+        </ul>
+        <form class="tx-add" @onsubmit="() => AddAsync(null)" @onsubmit:preventDefault>
+          <div class="mud-input-wrapper mud-input-wrapper--dense">
+            <input class="mud-input-slot" @bind="_newTop" @bind:event="oninput" maxlength="200" placeholder="New top-level term" aria-label="New top-level term" dir="auto" />
+          </div>
+          <button type="submit" class="mud-button-root mud-button-outlined mud-button-primary mud-button-small" disabled="@(Busy || _newTop.Trim().Length == 0)">Add</button>
+        </form>
+      </section>
+
+      <aside class="tx-side">
+        @if (Selected is { } sel)
+        {
+          <section class="mud-paper mud-elevation-1 mn-card">
+            <h2 class="mud-typography mud-typography-h6">@sel.Name</h2>
+            <p class="mud-typography mud-typography-body2 mn-muted">id <code>@sel.Id</code> · @sel.Path</p>
+            <div class="mud-input-control">
+              <label class="mud-input-label" for="tx-t-name">Name *</label>
+              <div class="mud-input-wrapper"><input id="tx-t-name" class="mud-input-slot" @bind="_tName" maxlength="200" dir="auto" /></div>
+            </div>
+            <div class="tx-grid">
+              <div class="mud-input-control">
+                <label class="mud-input-label" for="tx-t-slug">Slug</label>
+                <div class="mud-input-wrapper"><input id="tx-t-slug" class="mud-input-slot" @bind="_tSlug" maxlength="120" dir="auto" /></div>
+              </div>
+              <div class="mud-input-control">
+                <label class="mud-input-label" for="tx-t-code">Code</label>
+                <div class="mud-input-wrapper"><input id="tx-t-code" class="mud-input-slot" @bind="_tCode" maxlength="64" placeholder="@sel.Slug" /></div>
+                <div class="mud-input-helper-text">schema.org termCode: an IPTC or internal code; the slug when empty.</div>
+              </div>
+            </div>
+            <div class="mud-input-control">
+              <label class="mud-input-label" for="tx-t-description">Description</label>
+              <div class="mud-input-wrapper"><textarea id="tx-t-description" class="mud-input-slot" rows="2" maxlength="1000" @bind="_tDescription" dir="auto"></textarea></div>
+            </div>
+            <div class="mud-input-control">
+              <span class="mud-input-label">Keywords concept</span>
+              <div class="tx-chips">
+                @if (_tConceptId is { } conceptId)
+                {
+                  <span class="mn-chip tx-concept">◆ @(_tConceptName ?? $"#{conceptId}")
+                    <button type="button" class="tx-chip-remove" @onclick="() => { _tConceptId = null; _tConceptName = null; }" aria-label="Unlink the concept">✕</button></span>
+                }
+                @if (ModuleDialogs.IsAvailable(PickConcepts))
+                {
+                  <button type="button" class="mud-button-root mud-button-outlined mud-button-primary mud-button-small" @onclick="PickConceptAsync">@(_tConceptId is null ? "Choose…" : "Change…")</button>
+                }
+                else
+                {
+                  <div class="mud-input-wrapper mud-input-wrapper--dense tx-concept-id">
+                    <input class="mud-input-slot" type="number" min="1" @bind="_tConceptId" aria-label="Concept id" placeholder="concept id" />
+                  </div>
+                }
+              </div>
+              <div class="mud-input-helper-text">The person, place or topic this term stands for; content classified with it is then about that concept too.</div>
+            </div>
+            <div class="mn-row-actions">
+              <button type="button" class="mud-button-root mud-button-filled mud-button-primary mud-button-medium" @onclick="SaveTermAsync" disabled="@(Busy || _tName.Trim().Length == 0)">Save</button>
+              <button type="button" class="mud-button-root mud-button-outlined mud-button-error mud-button-medium" @onclick="RemoveAsync"
+                      disabled="@(Busy || sel.ChildCount > 0)" title="@(sel.ChildCount > 0 ? "Move or remove its terms first" : "")">Remove</button>
+            </div>
+            <form class="tx-add" @onsubmit="() => AddAsync(sel.Id)" @onsubmit:preventDefault>
+              <div class="mud-input-wrapper mud-input-wrapper--dense">
+                <input class="mud-input-slot" @bind="_newChild" @bind:event="oninput" maxlength="200" placeholder="@($"New term under {sel.Name}")" aria-label="New term under this one" dir="auto" />
+              </div>
+              <button type="submit" class="mud-button-root mud-button-outlined mud-button-primary mud-button-small" disabled="@(Busy || _newChild.Trim().Length == 0)">Add</button>
+            </form>
+          </section>
+        }
+        else
+        {
+          <section class="mud-paper mud-elevation-1 mn-card">
+            <p class="mud-typography mud-typography-body2 mn-muted">Select a term to change it, link it to a concept or add terms under it.</p>
+          </section>
+        }
+      </aside>
+    </div>
+  }
+</div>
+
+@code {
+  [SupplyParameterFromQuery(Name = "key")] public string? Key { get; set; }
+
+  private const string PickConcepts = "Module.Keywords/pick-concepts";
+  private static readonly JsonSerializerOptions Pretty = new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
+  /// <summary>What Module.Keywords/pick-concepts answers (its documented contract).</summary>
+  private sealed record PickedConcepts(List<string>? Ids, List<PickedConcept>? Concepts);
+  private sealed record PickedConcept(string Id, string Name);
+
+  private SchemeDto? _scheme;
+  private string? _loadedKey;
+  private int? _selectedId;
+  private string _newTop = "";
+  private string _newChild = "";
+  private string? _jsonLd;
+  private bool _settingsOpen;
+  private string _sName = "";
+  private string _sLanguage = "en";
+  private string? _sDescription;
+  private string _tName = "";
+  private string? _tSlug;
+  private string? _tCode;
+  private string? _tDescription;
+  private int? _tConceptId;
+  private string? _tConceptName;
+
+  private TermDto? Selected => _scheme?.Terms.FirstOrDefault(t => t.Id == _selectedId);
+
+  protected override async Task OnParametersSetAsync()
+  {
+    if (_loadedKey == Key) return;
+    _loadedKey = Key;
+    if (string.IsNullOrWhiteSpace(Key))
+    {
+      Error = "No scheme: open one from the Taxonomies page.";
+      return;
+    }
+    await RunAsync(async () => Show(await Api.GetSchemeAsync(Key)), toast: false);
+  }
+
+  private void Show(SchemeDto scheme)
+  {
+    _scheme = scheme;
+    if (_jsonLd is not null) _jsonLd = null; // stale: reopen to see the new one
+    if (Selected is { } t) Select(t);
+    else _selectedId = null;
+  }
+
+  private void Select(TermDto term)
+  {
+    _selectedId = term.Id;
+    _tName = term.Name;
+    _tSlug = term.Slug;
+    _tCode = term.Code;
+    _tDescription = term.Description;
+    _tConceptId = term.ConceptId;
+    _tConceptName = term.ConceptName;
+  }
+
+  private List<TermDto> Siblings(int? parentId) => [.. _scheme!.Terms.Where(t => t.ParentId == parentId).OrderBy(t => t.Position)];
+
+  private static TermValues Values(string name, string? slug = null, string? code = null, string? description = null, int? conceptId = null, string? conceptName = null) => new()
+  {
+    Name = name.Trim(),
+    Slug = string.IsNullOrWhiteSpace(slug) ? null : slug.Trim(),
+    Code = string.IsNullOrWhiteSpace(code) ? null : code.Trim(),
+    Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+    ConceptId = conceptId,
+    ConceptName = conceptId is null ? null : conceptName
+  };
+
+  private async Task AddAsync(int? parentId)
+  {
+    var name = (parentId is null ? _newTop : _newChild).Trim();
+    if (_scheme is not { } scheme || name.Length == 0) return;
+    await RunAsync(async () =>
+    {
+      Show(await Api.AddTermAsync(scheme.Key, new NewTerm { Version = scheme.Version, ParentId = parentId, Values = Values(name) }));
+      if (parentId is null) _newTop = "";
+      else _newChild = "";
+    });
+  }
+
+  private async Task SaveTermAsync()
+  {
+    if (_scheme is not { } scheme || Selected is not { } term) return;
+    await RunAsync(async () =>
+    {
+      Show(await Api.EditTermAsync(scheme.Key, term.Id, new TermEdit
+      {
+        Version = scheme.Version,
+        Values = Values(_tName, _tSlug, _tCode, _tDescription, _tConceptId, _tConceptName)
+      }));
+      await MudTail.ToastAsync("Saved.", "success");
+    });
+  }
+
+  private async Task RemoveAsync()
+  {
+    if (_scheme is not { } scheme || Selected is not { } term) return;
+    await RunAsync(async () =>
+    {
+      _selectedId = null;
+      Show(await Api.RemoveTermAsync(scheme.Key, term.Id, scheme.Version));
+      await MudTail.ToastAsync($"Removed \"{term.Name}\".", "success");
+    });
+  }
+
+  private async Task MoveAsync(TermDto term, int? parentId, int position)
+  {
+    if (_scheme is not { } scheme) return;
+    await RunAsync(async () => Show(await Api.MoveTermAsync(scheme.Key, term.Id, new TermMove { Version = scheme.Version, ParentId = parentId, Position = position })));
+  }
+
+  /// <summary>Under the sibling above it, as that term's last child.</summary>
+  private Task IndentAsync(TermDto term)
+  {
+    var above = Siblings(term.ParentId).LastOrDefault(t => t.Position < term.Position);
+    return above is null ? Task.CompletedTask : MoveAsync(term, above.Id, above.ChildCount);
+  }
+
+  /// <summary>Out of its parent, right after it.</summary>
+  private Task OutdentAsync(TermDto term)
+  {
+    var parent = _scheme!.Terms.FirstOrDefault(t => t.Id == term.ParentId);
+    return parent is null ? Task.CompletedTask : MoveAsync(term, parent.ParentId, parent.Position + 1);
+  }
+
+  private async Task PickConceptAsync()
+  {
+    var selected = _tConceptId is { } id ? new[] { id.ToString() } : [];
+    var result = await ModuleDialogs.ShowAsync(PickConcepts, new { multiple = false, selected, language = _scheme?.Language });
+    if (result.Canceled || result.As<PickedConcepts>() is not { } picked) return;
+    var first = picked.Concepts?.FirstOrDefault();
+    if (first is null || !int.TryParse(first.Id, out var conceptId)) return;
+    _tConceptId = conceptId;
+    _tConceptName = first.Name;
+    if (string.IsNullOrWhiteSpace(_tName)) _tName = first.Name;
+  }
+
+  private void ToggleSettings()
+  {
+    _settingsOpen = !_settingsOpen;
+    if (_scheme is not { } s) return;
+    _sName = s.Name;
+    _sLanguage = s.Language;
+    _sDescription = s.Description;
+  }
+
+  private async Task SaveSettingsAsync()
+  {
+    if (_scheme is not { } scheme) return;
+    await RunAsync(async () =>
+    {
+      Show(await Api.EditSchemeAsync(scheme.Key, new SchemeEdit
+      {
+        Version = scheme.Version,
+        Values = new SchemeValues { Name = _sName.Trim(), Language = _sLanguage.Trim(), Description = string.IsNullOrWhiteSpace(_sDescription) ? null : _sDescription.Trim() }
+      }));
+      _settingsOpen = false;
+    });
+  }
+
+  private async Task ToggleJsonLdAsync()
+  {
+    if (_jsonLd is not null || _scheme is not { } scheme)
+    {
+      _jsonLd = null;
+      return;
+    }
+    await RunAsync(async () => _jsonLd = JsonSerializer.Serialize((await Api.GetSchemeJsonLdAsync(scheme.Key)).JsonLd, Pretty));
+  }
+
+  private async Task DeleteSchemeAsync()
+  {
+    if (_scheme is not { } scheme) return;
+    await RunAsync(async () =>
+    {
+      await Api.DeleteSchemeAsync(scheme.Key, scheme.Version);
+      await MudTail.ToastAsync($"Deleted \"{scheme.Name}\".", "success");
+      Nav.NavigateTo("taxonomies");
+    });
+  }
+}

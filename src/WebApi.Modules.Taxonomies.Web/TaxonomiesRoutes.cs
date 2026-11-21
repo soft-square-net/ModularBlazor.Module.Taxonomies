@@ -1,5 +1,5 @@
 using Carter;
-using Notes = soft.square.net.WebApi.Modules.Taxonomies.Web.Notes;
+using Schemes = soft.square.net.WebApi.Modules.Taxonomies.Web.Schemes;
 
 namespace soft.square.net.WebApi.Modules.Taxonomies.Web;
 
@@ -12,14 +12,23 @@ public sealed class TaxonomiesRoutes : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        // Problem details for domain rules and lost races, on the module's own group (module code, unloads with it).
-        var notes = app.MapGroup("/notes").WithTags("Notes").AddEndpointFilter<TaxonomiesProblemsFilter>();
+        // Problem details for domain rules and lost races, on the module's own groups (module code, unloads with it).
+        var schemes = app.MapGroup("/schemes").WithTags("Schemes").AddEndpointFilter<TaxonomiesProblemsFilter>();
+        var terms = app.MapGroup("/terms").WithTags("Terms").AddEndpointFilter<TaxonomiesProblemsFilter>();
 
-        Notes.List.Map(notes);
-        Notes.Search.Map(notes);
-        Notes.GetById.Map(notes);
-        Notes.Create.Map(notes);
-        Notes.Edit.Map(notes);
-        Notes.Delete.Map(notes);
+        Schemes.List.Map(schemes);
+        Schemes.Create.Map(schemes);
+        Schemes.Get.Map(schemes);
+        Schemes.JsonLd.Map(schemes);
+        Schemes.Edit.Map(schemes);
+        Schemes.Delete.Map(schemes);
+        Schemes.AddTerm.Map(schemes);
+        Schemes.EditTerm.Map(schemes);
+        Schemes.MoveTerm.Map(schemes);
+        Schemes.RemoveTerm.Map(schemes);
+
+        Schemes.SearchTerms.Map(terms);
+        Schemes.LookupTerms.Map(terms);
+        Schemes.TermJsonLd.Map(terms);
     }
 }

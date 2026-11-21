@@ -15,7 +15,7 @@ public sealed class TaxonomiesModule : IRuntimeModule
 {
     public ModuleManifest Manifest { get; } = new("taxonomies", "Taxonomies", "0.1.0", "taxonomies")
     {
-        Description = "Taxonomies: notes per tenant (the template's example; replace with the module's own features).",
+        Description = "Taxonomies: classification schemes (sections, genres, categories) as trees of terms, each optionally standing for a Keywords concept, as schema.org DefinedTermSet JSON-LD.",
         DefaultSettings = new Dictionary<string, string?> { ["Taxonomies:MaxPageSize"] = "100" },
         Permissions = TaxonomiesPermissions.All
     };

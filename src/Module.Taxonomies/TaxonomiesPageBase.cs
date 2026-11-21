@@ -57,7 +57,7 @@ public abstract class TaxonomiesPageBase : ComponentBase
     protected static string Describe(Exception ex) => ex switch
     {
         TaxonomiesApiException { StatusCode: 400 } api when Mentions(api, "tenant") =>
-            "400: no tenant. Notes belong to a tenant: sign in to one (your organisation) to use them.",
+            "400: no tenant. Schemes belong to a tenant: sign in to one (your organisation) to use them.",
         TaxonomiesApiException { StatusCode: 401 } => "401: the gateway did not accept the access token. Sign in again.",
         TaxonomiesApiException { StatusCode: 403 } api =>
             $"403: {ProblemDetail(api) ?? "your account lacks the permission for this (taxonomies.* in this tenant)."}",

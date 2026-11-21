@@ -22,18 +22,13 @@ namespace soft.square.net.WebApi.Modules.Taxonomies.Infrastructure.Data.Migratio
 
             OracleModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.NoteAggregate.Note", b =>
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.TaxonomyScheme", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("NUMBER(10)");
 
                     OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("NVARCHAR2(2000)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TIMESTAMP(7) WITH TIME ZONE");
@@ -43,15 +38,29 @@ namespace soft.square.net.WebApi.Modules.Taxonomies.Infrastructure.Data.Migratio
                         .HasMaxLength(128)
                         .HasColumnType("NVARCHAR2(128)");
 
-                    b.Property<string>("TenantId")
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("NVARCHAR2(1000)");
+
+                    b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("NVARCHAR2(64)");
 
-                    b.Property<string>("Title")
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("NVARCHAR2(16)");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("NVARCHAR2(64)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("TIMESTAMP(7) WITH TIME ZONE");
@@ -64,7 +73,81 @@ namespace soft.square.net.WebApi.Modules.Taxonomies.Infrastructure.Data.Migratio
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("taxonomies_notes", (string)null);
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("taxonomies_schemes", (string)null);
+                });
+
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.Term", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(64)
+                        .HasColumnType("NVARCHAR2(64)");
+
+                    b.Property<int?>("ConceptId")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<string>("ConceptName")
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("NVARCHAR2(1000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<int>("SchemeId")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("NVARCHAR2(120)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TIMESTAMP(7) WITH TIME ZONE");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConceptId");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("SchemeId", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("taxonomies_terms", (string)null);
+                });
+
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.Term", b =>
+                {
+                    b.HasOne("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.TaxonomyScheme", null)
+                        .WithMany("Terms")
+                        .HasForeignKey("SchemeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.TaxonomyScheme", b =>
+                {
+                    b.Navigation("Terms");
                 });
 #pragma warning restore 612, 618
         }

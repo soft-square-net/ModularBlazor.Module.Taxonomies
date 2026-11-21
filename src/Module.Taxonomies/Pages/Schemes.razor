@@ -1,0 +1,124 @@
+@page "/taxonomies"
+@inherits TaxonomiesPageBase
+
+@*
+  The tenant's classification schemes (GET /api/taxonomies/schemes), and a form to start a new one. A row opens the
+  scheme's tree (/taxonomies/scheme?key=).
+*@
+
+<PageTitle>Taxonomies</PageTitle>
+
+<div class="mud-container mn-page">
+  <header class="mn-header">
+    <div>
+      <h1 class="mud-typography mud-typography-h4">Taxonomies</h1>
+      <p class="mud-typography mud-typography-body1 mn-muted">
+        The trees you classify content with: sections (World › Middle East › Egypt), genres, categories. Each term can
+        stand for a Keywords concept, so it carries that concept's names and links. Pages get them as schema.org
+        articleSection, genre and about. Reading needs taxonomies.read; changing, taxonomies.manage.
+      </p>
+    </div>
+    <div class="mn-actions">
+      <button type="button" class="mud-button-root mud-button-filled mud-button-primary mud-button-medium" @onclick="() => _creating = !_creating"
+              aria-expanded="@_creating">New scheme</button>
+    </div>
+  </header>
+
+  @if (Error is not null)
+  {
+    <p class="mud-typography mud-typography-body2 mn-error" role="alert">@Error</p>
+  }
+
+  @if (_creating)
+  {
+    <section class="mud-paper mud-elevation-2 mn-card" aria-labelledby="tx-new">
+      <h2 id="tx-new" class="mud-typography mud-typography-h6">New scheme</h2>
+      <form class="tx-new" @onsubmit="CreateAsync" @onsubmit:preventDefault>
+        <div class="mud-input-control">
+          <label class="mud-input-label" for="tx-name">Name *</label>
+          <div class="mud-input-wrapper"><input id="tx-name" class="mud-input-slot" @bind="_name" @bind:event="oninput" @bind:after="SuggestKey" maxlength="200" placeholder="Sections" /></div>
+        </div>
+        <div class="mud-input-control">
+          <label class="mud-input-label" for="tx-key">Key *</label>
+          <div class="mud-input-wrapper"><input id="tx-key" class="mud-input-slot" @bind="_key" @bind:event="oninput" @bind:after="() => _keyTouched = true" maxlength="64" placeholder="sections" /></div>
+          <div class="mud-input-helper-text">Lower-case words joined by "." or "-". Other modules use it; it never changes.</div>
+        </div>
+        <div class="mud-input-control">
+          <label class="mud-input-label" for="tx-language">Language of the names</label>
+          <div class="mud-input-wrapper"><input id="tx-language" class="mud-input-slot" @bind="_language" maxlength="16" list="tx-languages" /></div>
+          <datalist id="tx-languages"><option value="en">English</option><option value="ar">العربية</option><option value="fr">Français</option></datalist>
+        </div>
+        <div class="mud-input-control tx-new-wide">
+          <label class="mud-input-label" for="tx-description">Description</label>
+          <div class="mud-input-wrapper"><input id="tx-description" class="mud-input-slot" @bind="_description" maxlength="1000" placeholder="What it classifies, and how" /></div>
+        </div>
+        <div class="mn-row-actions tx-new-wide">
+          <button type="submit" class="mud-button-root mud-button-filled mud-button-primary mud-button-medium" disabled="@(Busy || _name.Trim().Length == 0 || _key.Trim().Length == 0)">Create</button>
+          <button type="button" class="mud-button-root mud-button-text mud-button-medium" @onclick="() => _creating = false">Cancel</button>
+        </div>
+      </form>
+    </section>
+  }
+
+  <section class="mud-paper mud-elevation-1 mn-card">
+    <MudTailDataTable @ref="_table" RowKey="key" Columns="Columns" OnRowClick="Open" EmptyText="No schemes yet. Create one: Sections, Genres, Categories." />
+  </section>
+</div>
+
+@code {
+  private static readonly IReadOnlyList<object> Columns =
+  [
+    new { key = "name", title = "Name" },
+    new { key = "key", title = "Key", width = "180px" },
+    new { key = "terms", title = "Terms", type = "number", width = "100px" },
+    new { key = "language", title = "Language", width = "110px" },
+    new { key = "updated", title = "Changed", width = "160px" },
+  ];
+
+  private MudTailDataTable? _table;
+  private bool _creating;
+  private string _name = "";
+  private string _key = "";
+  private bool _keyTouched;
+  private string _language = "en";
+  private string? _description;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender) await LoadAsync();
+  }
+
+  private async Task LoadAsync() => await RunAsync(async () =>
+  {
+    var schemes = await Api.ListSchemesAsync();
+    if (_table is not null)
+      await _table.SetDataAsync(schemes.Select(s => (object)new
+      {
+        key = s.Key, name = s.Name, terms = s.TermCount, language = s.Language, updated = When(s.UpdatedAt)
+      }).ToList());
+  });
+
+  /// <summary>A key from the name while the key has not been typed: lower-case ASCII words joined by "-".</summary>
+  private void SuggestKey()
+  {
+    if (_keyTouched) return;
+    var chars = _name.Trim().ToLowerInvariant().Select(c => c is >= 'a' and <= 'z' or >= '0' and <= '9' ? c : '-');
+    _key = string.Join("-", new string([.. chars]).Split('-', StringSplitOptions.RemoveEmptyEntries));
+  }
+
+  private async Task CreateAsync()
+  {
+    await RunAsync(async () =>
+    {
+      var scheme = await Api.CreateSchemeAsync(new NewScheme
+      {
+        Key = _key.Trim(),
+        Values = new SchemeValues { Name = _name.Trim(), Language = _language.Trim(), Description = string.IsNullOrWhiteSpace(_description) ? null : _description.Trim() }
+      });
+      await MudTail.ToastAsync($"Created \"{scheme.Name}\".", "success");
+      Nav.NavigateTo($"taxonomies/scheme?key={Uri.EscapeDataString(scheme.Key)}");
+    });
+  }
+
+  private void Open(string key) => Nav.NavigateTo($"taxonomies/scheme?key={Uri.EscapeDataString(key)}");
+}

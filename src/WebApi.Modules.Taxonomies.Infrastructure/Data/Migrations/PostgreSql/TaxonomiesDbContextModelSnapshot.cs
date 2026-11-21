@@ -23,18 +23,13 @@ namespace soft.square.net.WebApi.Modules.Taxonomies.Infrastructure.Data.Migratio
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.NoteAggregate.Note", b =>
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.TaxonomyScheme", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -44,15 +39,29 @@ namespace soft.square.net.WebApi.Modules.Taxonomies.Infrastructure.Data.Migratio
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
-                    b.Property<string>("TenantId")
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
-                    b.Property<string>("Title")
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -65,7 +74,81 @@ namespace soft.square.net.WebApi.Modules.Taxonomies.Infrastructure.Data.Migratio
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("notes", "taxonomies");
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("schemes", "taxonomies");
+                });
+
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.Term", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int?>("ConceptId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConceptName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SchemeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConceptId");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("SchemeId", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("terms", "taxonomies");
+                });
+
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.Term", b =>
+                {
+                    b.HasOne("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.TaxonomyScheme", null)
+                        .WithMany("Terms")
+                        .HasForeignKey("SchemeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("soft.square.net.WebApi.Modules.Taxonomies.Core.SchemeAggregate.TaxonomyScheme", b =>
+                {
+                    b.Navigation("Terms");
                 });
 #pragma warning restore 612, 618
         }
