@@ -14,25 +14,25 @@
     @if (_fixedScheme is null && _schemes.Count > 1)
     {
       <div class="mud-input-wrapper mud-input-wrapper--dense mud-input-wrapper--select">
-        <select class="mud-input-slot" @bind="_scheme" @bind:after="SearchAsync" aria-label="Scheme">
-          <option value="">All schemes</option>
+        <select class="mud-input-slot" @bind="_scheme" @bind:after="SearchAsync" aria-label="@L["Scheme"]">
+          <option value="">@L["All schemes"]</option>
           @foreach (var s in _schemes) { <option value="@s.Key">@s.Name</option> }
         </select>
       </div>
     }
     <div class="mud-input-wrapper mud-input-wrapper--dense tx-picker-query">
       <input type="search" class="mud-input-slot" @bind="_query" @bind:event="oninput" @bind:after="SearchAsync"
-             placeholder="Search terms" aria-label="Search terms" autofocus dir="auto" />
+             placeholder="@L["Search terms"]" aria-label="@L["Search terms"]" autofocus dir="auto" />
     </div>
   </form>
 
   @if (_multiple && _selected.Count > 0)
   {
-    <div class="tx-chips" aria-label="Chosen">
+    <div class="tx-chips" aria-label="@L["Chosen"]">
       @foreach (var s in _selected)
       {
         var t = s;
-        <span class="mn-chip tx-chip" title="@t.Path">@t.Name <button type="button" class="tx-chip-remove" @onclick="() => Toggle(t)" aria-label="@($"Remove {t.Name}")">✕</button></span>
+        <span class="mn-chip tx-chip" title="@t.Path">@t.Name <button type="button" class="tx-chip-remove" @onclick="() => Toggle(t)" aria-label="@L["Remove {0}", t.Name]">✕</button></span>
       }
     </div>
   }
@@ -67,15 +67,15 @@
   </ul>
   @if (_results.Count == 0 && !Busy)
   {
-    <p class="mud-typography mud-typography-body2 mn-muted">@(_query.Trim().Length == 0 ? "No terms yet: add them on the Taxonomies page." : $"No term matches \"{_query.Trim()}\".")</p>
+    <p class="mud-typography mud-typography-body2 mn-muted">@(_query.Trim().Length == 0 ? L["No terms yet: add them on the Taxonomies page."] : L["No term matches \"{0}\".", _query.Trim()])</p>
   }
-  @if (_results.Count == Limit) { <p class="mud-typography mud-typography-body2 mn-muted">Showing the first @Limit: search to find others.</p> }
+  @if (_results.Count == Limit) { <p class="mud-typography mud-typography-body2 mn-muted">@L["Showing the first {0}: search to find others.", Limit]</p> }
 </div>
 <div class="mud-dialog-actions">
-  <button type="button" class="mud-button-root mud-button-text mud-button-medium" @onclick="Dialog.Cancel">Cancel</button>
+  <button type="button" class="mud-button-root mud-button-text mud-button-medium" @onclick="Dialog.Cancel">@L["Cancel"]</button>
   @if (_multiple)
   {
-    <button type="button" class="mud-button-root mud-button-filled mud-button-primary mud-button-medium" @onclick="Done">Choose (@_selected.Count)</button>
+    <button type="button" class="mud-button-root mud-button-filled mud-button-primary mud-button-medium" @onclick="Done">@L["Choose ({0})", _selected.Count]</button>
   }
 </div>
 

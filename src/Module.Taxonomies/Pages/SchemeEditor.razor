@@ -11,17 +11,17 @@
   is one call that answers with the whole tree, at the scheme's new version.
 *@
 
-<PageTitle>@(_scheme?.Name ?? "Scheme")</PageTitle>
+<PageTitle>@(_scheme?.Name ?? L["Scheme"])</PageTitle>
 
 <div class="mud-container mn-page">
   <header class="mn-header">
     <div>
-      <a href="taxonomies" class="mud-typography mud-typography-body2 tx-back">← Taxonomies</a>
+      <a href="taxonomies" class="mud-typography mud-typography-body2 tx-back">@L["← Taxonomies"]</a>
       <h1 class="mud-typography mud-typography-h4">@(_scheme?.Name ?? Key)</h1>
       @if (_scheme is { } s)
       {
         <p class="mud-typography mud-typography-body2 mn-muted">
-          <code>@s.Key</code> · @s.Terms.Count terms · language @s.Language · version @s.Version · changed @When(s.UpdatedAt)
+          <code>@s.Key</code> · @L["{0} terms", s.Terms.Count] · @L["language {0}", s.Language] · @L["version {0}", s.Version] · @L["changed {0}", When(s.UpdatedAt)]
           @if (s.Description is { Length: > 0 } d) { <br /><span>@d</span> }
         </p>
       }
@@ -29,11 +29,11 @@
     @if (_scheme is { } scheme)
     {
       <div class="mn-actions">
-        <button type="button" class="mud-button-root mud-button-outlined mud-button-primary mud-button-medium" @onclick="ToggleSettings" aria-expanded="@_settingsOpen">Scheme settings</button>
-        <button type="button" class="mud-button-root mud-button-outlined mud-button-primary mud-button-medium" @onclick="ToggleJsonLdAsync" aria-expanded="@(_jsonLd is not null)">JSON-LD</button>
+        <button type="button" class="mud-button-root mud-button-outlined mud-button-primary mud-button-medium" @onclick="ToggleSettings" aria-expanded="@_settingsOpen">@L["Scheme settings"]</button>
+        <button type="button" class="mud-button-root mud-button-outlined mud-button-primary mud-button-medium" @onclick="ToggleJsonLdAsync" aria-expanded="@(_jsonLd is not null)">@L["JSON-LD"]</button>
         @if (scheme.Terms.Count == 0)
         {
-          <button type="button" class="mud-button-root mud-button-outlined mud-button-error mud-button-medium" @onclick="DeleteSchemeAsync" disabled="@Busy">Delete scheme</button>
+          <button type="button" class="mud-button-root mud-button-outlined mud-button-error mud-button-medium" @onclick="DeleteSchemeAsync" disabled="@Busy">@L["Delete scheme"]</button>
         }
       </div>
     }
@@ -46,31 +46,31 @@
 
   @if (_scheme is null)
   {
-    @if (Error is null) { <p class="mud-typography mud-typography-body2 mn-muted">Loading…</p> }
+    @if (Error is null) { <p class="mud-typography mud-typography-body2 mn-muted">@L["Loading…"]</p> }
   }
   else
   {
     @if (_settingsOpen)
     {
       <section class="mud-paper mud-elevation-2 mn-card">
-        <h2 class="mud-typography mud-typography-h6">Scheme settings</h2>
+        <h2 class="mud-typography mud-typography-h6">@L["Scheme settings"]</h2>
         <div class="tx-grid">
           <div class="mud-input-control">
-            <label class="mud-input-label" for="tx-s-name">Name *</label>
+            <label class="mud-input-label" for="tx-s-name">@L["Name *"]</label>
             <div class="mud-input-wrapper"><input id="tx-s-name" class="mud-input-slot" @bind="_sName" maxlength="200" /></div>
           </div>
           <div class="mud-input-control">
-            <label class="mud-input-label" for="tx-s-language">Language of the names</label>
+            <label class="mud-input-label" for="tx-s-language">@L["Language of the names"]</label>
             <div class="mud-input-wrapper"><input id="tx-s-language" class="mud-input-slot" @bind="_sLanguage" maxlength="16" /></div>
           </div>
         </div>
         <div class="mud-input-control">
-          <label class="mud-input-label" for="tx-s-description">Description</label>
+          <label class="mud-input-label" for="tx-s-description">@L["Description"]</label>
           <div class="mud-input-wrapper"><textarea id="tx-s-description" class="mud-input-slot" rows="2" maxlength="1000" @bind="_sDescription"></textarea></div>
         </div>
         <div class="mn-row-actions">
-          <button type="button" class="mud-button-root mud-button-filled mud-button-primary mud-button-medium" @onclick="SaveSettingsAsync" disabled="@Busy">Save</button>
-          <button type="button" class="mud-button-root mud-button-text mud-button-medium" @onclick="() => _settingsOpen = false">Close</button>
+          <button type="button" class="mud-button-root mud-button-filled mud-button-primary mud-button-medium" @onclick="SaveSettingsAsync" disabled="@Busy">@L["Save"]</button>
+          <button type="button" class="mud-button-root mud-button-text mud-button-medium" @onclick="() => _settingsOpen = false">@L["Close"]</button>
         </div>
       </section>
     }
@@ -78,18 +78,18 @@
     @if (_jsonLd is not null)
     {
       <section class="mud-paper mud-elevation-2 mn-card">
-        <h2 class="mud-typography mud-typography-h6">JSON-LD</h2>
-        <p class="mud-typography mud-typography-body2 mn-muted">The scheme as a schema.org DefinedTermSet. A page tagged with a term embeds that term as <code>about</code> and its path as <code>articleSection</code>.</p>
+        <h2 class="mud-typography mud-typography-h6">@L["JSON-LD"]</h2>
+        <p class="mud-typography mud-typography-body2 mn-muted">@((MarkupString)L["The scheme as a schema.org DefinedTermSet. A page tagged with a term embeds that term as <code>about</code> and its path as <code>articleSection</code>."].Value)</p>
         <pre class="mn-result tx-jsonld" dir="ltr">@_jsonLd</pre>
       </section>
     }
 
     <div class="tx-editor">
       <section class="mud-paper mud-elevation-1 mn-card tx-tree-card">
-        <h2 class="mud-typography mud-typography-h6">Terms</h2>
+        <h2 class="mud-typography mud-typography-h6">@L["Terms"]</h2>
         @if (_scheme.Terms.Count == 0)
         {
-          <p class="mud-typography mud-typography-body2 mn-muted">No terms yet. Add the top-level ones below, then the ones under them.</p>
+          <p class="mud-typography mud-typography-body2 mn-muted">@L["No terms yet. Add the top-level ones below, then the ones under them."]</p>
         }
         <ul class="tx-tree" role="tree" aria-label="Terms of @_scheme.Name">
           @foreach (var term in _scheme.Terms)
@@ -100,23 +100,23 @@
                 class="tx-term @(_selectedId == t.Id ? "tx-on" : "")" style="--tx-depth: @t.Depth">
               <button type="button" class="tx-term-name" @onclick="() => Select(t)">
                 <span>@t.Name</span>
-                @if (t.ConceptId is not null) { <span class="mn-chip tx-concept" title="Stands for the Keywords concept @t.ConceptName">◆ @(t.ConceptName ?? $"#{t.ConceptId}")</span> }
+                @if (t.ConceptId is not null) { <span class="mn-chip tx-concept" title="@L["Stands for the Keywords concept {0}", t.ConceptName ?? ""]">◆ @(t.ConceptName ?? $"#{t.ConceptId}")</span> }
                 @if (t.ChildCount > 0) { <span class="mn-muted tx-count">@t.ChildCount</span> }
               </button>
               <span class="tx-term-actions">
-                <button type="button" class="tx-icon" title="Up" aria-label="@($"Move {t.Name} up")" disabled="@(Busy || t.Position == 0)" @onclick="() => MoveAsync(t, t.ParentId, t.Position - 1)">↑</button>
-                <button type="button" class="tx-icon" title="Down" aria-label="@($"Move {t.Name} down")" disabled="@(Busy || t.Position >= siblings.Count - 1)" @onclick="() => MoveAsync(t, t.ParentId, t.Position + 1)">↓</button>
-                <button type="button" class="tx-icon" title="Under the term above" aria-label="@($"Move {t.Name} under the term above")" disabled="@(Busy || t.Position == 0)" @onclick="() => IndentAsync(t)">→</button>
-                <button type="button" class="tx-icon" title="Out of its parent" aria-label="@($"Move {t.Name} out of its parent")" disabled="@(Busy || t.ParentId is null)" @onclick="() => OutdentAsync(t)">←</button>
+                <button type="button" class="tx-icon" title="@L["Up"]" aria-label="@L["Move {0} up", t.Name]" disabled="@(Busy || t.Position == 0)" @onclick="() => MoveAsync(t, t.ParentId, t.Position - 1)">↑</button>
+                <button type="button" class="tx-icon" title="@L["Down"]" aria-label="@L["Move {0} down", t.Name]" disabled="@(Busy || t.Position >= siblings.Count - 1)" @onclick="() => MoveAsync(t, t.ParentId, t.Position + 1)">↓</button>
+                <button type="button" class="tx-icon" title="@L["Under the term above"]" aria-label="@L["Move {0} under the term above", t.Name]" disabled="@(Busy || t.Position == 0)" @onclick="() => IndentAsync(t)">→</button>
+                <button type="button" class="tx-icon" title="@L["Out of its parent"]" aria-label="@L["Move {0} out of its parent", t.Name]" disabled="@(Busy || t.ParentId is null)" @onclick="() => OutdentAsync(t)">←</button>
               </span>
             </li>
           }
         </ul>
         <form class="tx-add" @onsubmit="() => AddAsync(null)" @onsubmit:preventDefault>
           <div class="mud-input-wrapper mud-input-wrapper--dense">
-            <input class="mud-input-slot" @bind="_newTop" @bind:event="oninput" maxlength="200" placeholder="New top-level term" aria-label="New top-level term" dir="auto" />
+            <input class="mud-input-slot" @bind="_newTop" @bind:event="oninput" maxlength="200" placeholder="@L["New top-level term"]" aria-label="@L["New top-level term"]" dir="auto" />
           </div>
-          <button type="submit" class="mud-button-root mud-button-outlined mud-button-primary mud-button-small" disabled="@(Busy || _newTop.Trim().Length == 0)">Add</button>
+          <button type="submit" class="mud-button-root mud-button-outlined mud-button-primary mud-button-small" disabled="@(Busy || _newTop.Trim().Length == 0)">@L["Add"]</button>
         </form>
       </section>
 
@@ -125,33 +125,33 @@
         {
           <section class="mud-paper mud-elevation-1 mn-card">
             <h2 class="mud-typography mud-typography-h6">@sel.Name</h2>
-            <p class="mud-typography mud-typography-body2 mn-muted">id <code>@sel.Id</code> · @sel.Path</p>
+            <p class="mud-typography mud-typography-body2 mn-muted">@L["id"] <code>@sel.Id</code> · @sel.Path</p>
             <div class="mud-input-control">
-              <label class="mud-input-label" for="tx-t-name">Name *</label>
+              <label class="mud-input-label" for="tx-t-name">@L["Name *"]</label>
               <div class="mud-input-wrapper"><input id="tx-t-name" class="mud-input-slot" @bind="_tName" maxlength="200" dir="auto" /></div>
             </div>
             <div class="tx-grid">
               <div class="mud-input-control">
-                <label class="mud-input-label" for="tx-t-slug">Slug</label>
+                <label class="mud-input-label" for="tx-t-slug">@L["Slug"]</label>
                 <div class="mud-input-wrapper"><input id="tx-t-slug" class="mud-input-slot" @bind="_tSlug" maxlength="120" dir="auto" /></div>
               </div>
               <div class="mud-input-control">
-                <label class="mud-input-label" for="tx-t-code">Code</label>
+                <label class="mud-input-label" for="tx-t-code">@L["Code"]</label>
                 <div class="mud-input-wrapper"><input id="tx-t-code" class="mud-input-slot" @bind="_tCode" maxlength="64" placeholder="@sel.Slug" /></div>
-                <div class="mud-input-helper-text">schema.org termCode: an IPTC or internal code; the slug when empty.</div>
+                <div class="mud-input-helper-text">@L["schema.org termCode: an IPTC or internal code; the slug when empty."]</div>
               </div>
             </div>
             <div class="mud-input-control">
-              <label class="mud-input-label" for="tx-t-description">Description</label>
+              <label class="mud-input-label" for="tx-t-description">@L["Description"]</label>
               <div class="mud-input-wrapper"><textarea id="tx-t-description" class="mud-input-slot" rows="2" maxlength="1000" @bind="_tDescription" dir="auto"></textarea></div>
             </div>
             <div class="mud-input-control">
-              <span class="mud-input-label">Keywords concept</span>
+              <span class="mud-input-label">@L["Keywords concept"]</span>
               <div class="tx-chips">
                 @if (_tConceptId is { } conceptId)
                 {
                   <span class="mn-chip tx-concept">◆ @(_tConceptName ?? $"#{conceptId}")
-                    <button type="button" class="tx-chip-remove" @onclick="() => { _tConceptId = null; _tConceptName = null; }" aria-label="Unlink the concept">✕</button></span>
+                    <button type="button" class="tx-chip-remove" @onclick="() => { _tConceptId = null; _tConceptName = null; }" aria-label="@L["Unlink the concept"]">✕</button></span>
                 }
                 @if (ModuleDialogs.IsAvailable(PickConcepts))
                 {
@@ -160,29 +160,29 @@
                 else
                 {
                   <div class="mud-input-wrapper mud-input-wrapper--dense tx-concept-id">
-                    <input class="mud-input-slot" type="number" min="1" @bind="_tConceptId" aria-label="Concept id" placeholder="concept id" />
+                    <input class="mud-input-slot" type="number" min="1" @bind="_tConceptId" aria-label="@L["Concept id"]" placeholder="@L["concept id"]" />
                   </div>
                 }
               </div>
-              <div class="mud-input-helper-text">The person, place or topic this term stands for; content classified with it is then about that concept too.</div>
+              <div class="mud-input-helper-text">@L["The person, place or topic this term stands for; content classified with it is then about that concept too."]</div>
             </div>
             <div class="mn-row-actions">
-              <button type="button" class="mud-button-root mud-button-filled mud-button-primary mud-button-medium" @onclick="SaveTermAsync" disabled="@(Busy || _tName.Trim().Length == 0)">Save</button>
+              <button type="button" class="mud-button-root mud-button-filled mud-button-primary mud-button-medium" @onclick="SaveTermAsync" disabled="@(Busy || _tName.Trim().Length == 0)">@L["Save"]</button>
               <button type="button" class="mud-button-root mud-button-outlined mud-button-error mud-button-medium" @onclick="RemoveAsync"
-                      disabled="@(Busy || sel.ChildCount > 0)" title="@(sel.ChildCount > 0 ? "Move or remove its terms first" : "")">Remove</button>
+                      disabled="@(Busy || sel.ChildCount > 0)" title="@(sel.ChildCount > 0 ? L["Move or remove its terms first"] : "")">@L["Remove"]</button>
             </div>
             <form class="tx-add" @onsubmit="() => AddAsync(sel.Id)" @onsubmit:preventDefault>
               <div class="mud-input-wrapper mud-input-wrapper--dense">
-                <input class="mud-input-slot" @bind="_newChild" @bind:event="oninput" maxlength="200" placeholder="@($"New term under {sel.Name}")" aria-label="New term under this one" dir="auto" />
+                <input class="mud-input-slot" @bind="_newChild" @bind:event="oninput" maxlength="200" placeholder="@($"New term under {sel.Name}")" aria-label="@L["New term under this one"]" dir="auto" />
               </div>
-              <button type="submit" class="mud-button-root mud-button-outlined mud-button-primary mud-button-small" disabled="@(Busy || _newChild.Trim().Length == 0)">Add</button>
+              <button type="submit" class="mud-button-root mud-button-outlined mud-button-primary mud-button-small" disabled="@(Busy || _newChild.Trim().Length == 0)">@L["Add"]</button>
             </form>
           </section>
         }
         else
         {
           <section class="mud-paper mud-elevation-1 mn-card">
-            <p class="mud-typography mud-typography-body2 mn-muted">Select a term to change it, link it to a concept or add terms under it.</p>
+            <p class="mud-typography mud-typography-body2 mn-muted">@L["Select a term to change it, link it to a concept or add terms under it."]</p>
           </section>
         }
       </aside>
@@ -225,7 +225,7 @@
     _loadedKey = Key;
     if (string.IsNullOrWhiteSpace(Key))
     {
-      Error = "No scheme: open one from the Taxonomies page.";
+      Error = L["No scheme: open one from the Taxonomies page."];
       return;
     }
     await RunAsync(async () => Show(await Api.GetSchemeAsync(Key)), toast: false);
@@ -284,7 +284,7 @@
         Version = scheme.Version,
         Values = Values(_tName, _tSlug, _tCode, _tDescription, _tConceptId, _tConceptName)
       }));
-      await MudTail.ToastAsync("Saved.", "success");
+      await MudTail.ToastAsync(L["Saved."], "success");
     });
   }
 
@@ -295,7 +295,7 @@
     {
       _selectedId = null;
       Show(await Api.RemoveTermAsync(scheme.Key, term.Id, scheme.Version));
-      await MudTail.ToastAsync($"Removed \"{term.Name}\".", "success");
+      await MudTail.ToastAsync(L["Removed \"{0}\".", term.Name], "success");
     });
   }
 
@@ -370,7 +370,7 @@
     await RunAsync(async () =>
     {
       await Api.DeleteSchemeAsync(scheme.Key, scheme.Version);
-      await MudTail.ToastAsync($"Deleted \"{scheme.Name}\".", "success");
+      await MudTail.ToastAsync(L["Deleted \"{0}\".", scheme.Name], "success");
       Nav.NavigateTo("taxonomies");
     });
   }

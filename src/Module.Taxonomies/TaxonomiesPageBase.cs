@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using Microsoft.Extensions.Localization;
 using soft.square.net.ModularBlazor.Abstractions;
 using soft.square.net.ModularBlazor.Abstractions.MudTail;
 using soft.square.net.WebApi.Modules.Taxonomies.Client;
@@ -15,6 +16,12 @@ public abstract class TaxonomiesPageBase : ComponentBase
     [Inject] protected IHttpClientFactory HttpClients { get; set; } = default!;
     [Inject] protected MudTailRuntime MudTail { get; set; } = default!;
     [Inject] protected NavigationManager Nav { get; set; } = default!;
+    [Inject] protected IStringLocalizerFactory Texts { get; set; } = default!;
+
+    private IStringLocalizer? _l;
+
+    /// <summary>This module's texts (its embedded i18n/{culture}.json); the keys are the English texts.</summary>
+    protected IStringLocalizer L => _l ??= Texts.Create(GetType());
 
     /// <summary>The module's routes (/api/taxonomies/...) reach the pool that runs the module through the gateway.</summary>
     protected TaxonomiesClient Api => new(HttpClients.CreateClient(HttpClientNames.WebApi));
@@ -54,17 +61,17 @@ public abstract class TaxonomiesPageBase : ComponentBase
         return true;
     }
 
-    protected static string Describe(Exception ex) => ex switch
+    protected string Describe(Exception ex) => ex switch
     {
         TaxonomiesApiException { StatusCode: 400 } api when Mentions(api, "tenant") =>
-            "400: no tenant. Schemes belong to a tenant: sign in to one (your organisation) to use them.",
-        TaxonomiesApiException { StatusCode: 401 } => "401: the gateway did not accept the access token. Sign in again.",
+            L["400: no tenant. Schemes belong to a tenant: sign in to one (your organisation) to use them."],
+        TaxonomiesApiException { StatusCode: 401 } => L["401: the gateway did not accept the access token. Sign in again."],
         TaxonomiesApiException { StatusCode: 403 } api =>
-            $"403: {ProblemDetail(api) ?? "your account lacks the permission for this (taxonomies.* in this tenant)."}",
-        TaxonomiesApiException { StatusCode: 404 } api => $"404: {ProblemDetail(api) ?? "not found."}",
-        TaxonomiesApiException { StatusCode: 409 } api => $"409: {ProblemDetail(api) ?? "someone changed it meanwhile. Reload and try again."}",
+            $"403: {ProblemDetail(api) ?? L["your account lacks the permission for this (taxonomies.* in this tenant)."]}",
+        TaxonomiesApiException { StatusCode: 404 } api => $"404: {ProblemDetail(api) ?? L["not found."]}",
+        TaxonomiesApiException { StatusCode: 409 } api => $"409: {ProblemDetail(api) ?? L["someone changed it meanwhile. Reload and try again."]}",
         TaxonomiesApiException api => $"{api.StatusCode}: {ProblemDetail(api) ?? FirstLine(api.Response) ?? FirstLine(api.Message)}",
-        HttpRequestException http => $"The gateway is not reachable ({http.Message}).",
+        HttpRequestException http => L["The gateway is not reachable ({0}).", http.Message],
         _ => ex.Message,
     };
 
