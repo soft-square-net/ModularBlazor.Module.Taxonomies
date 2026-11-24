@@ -11,13 +11,12 @@
   is one call that answers with the whole tree, at the scheme's new version.
 *@
 
-<PageTitle>@(_scheme?.Name ?? L["Scheme"])</PageTitle>
+<PageHeader Title="@(_scheme?.Name ?? Key)" />
 
 <div class="mud-container mn-page">
   <header class="mn-header">
     <div>
       <a href="taxonomies" class="mud-typography mud-typography-body2 tx-back">@L["← Taxonomies"]</a>
-      <h1 class="mud-typography mud-typography-h4">@(_scheme?.Name ?? Key)</h1>
       @if (_scheme is { } s)
       {
         <p class="mud-typography mud-typography-body2 mn-muted">
